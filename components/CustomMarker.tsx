@@ -14,16 +14,17 @@ interface Props {
 }
 
 
-
+// CustomMarkerRef is to be partial of MapMarker
 export interface CustomMarkerRef {
   showCallout: () => void;
 }
+// use type of MutableRef<T, undefined> (type.3)
 // forwardRef<CustomMarkerRef | null, Props>(
 const CustomMarker = (props:Props) => {
   const { item, pinColor, opacity, getCloseStore, busanInfo, coordinate } = props;
-
+  // unnecessary useRef and wrong method
   // const markerRef: RefObject<MapMarker> = useRef<MapMarker>(null);
-
+  // throw error. that hooks realonly 
   // useImperativeHandle(ref, () => ({
   //   showCallout: () => {
       
