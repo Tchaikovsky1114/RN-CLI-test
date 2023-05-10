@@ -34,6 +34,11 @@ function App(): JSX.Element {
   const mapRef = useRef<any>(null);
   const flatlistRef = useRef<FlatList>(null);
   // RefObject로 정의되어 generic Overloading type 2.readonly(current의 값을 수정할 수 없음)
+  // modify MutableRefObject<T, undefind>[]
+  // don't init any value if it has any value, typescript throw error
+  // because of useRef type3 only have undefined of init value
+  // if you want to init value for component mount,
+  // don't use type casting. do define type
   // const markerRefs = useRef<Array<React.RefObject<MapMarker>>>([]);
   const [busanInfo,setBusanInfo] = useState<IBusanInfo>();
   const [filterTargetCloseStore, setFilterTargetCloseStore] = useState<IRstr[]>([]);
