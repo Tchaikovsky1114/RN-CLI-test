@@ -33,6 +33,7 @@ function App(): JSX.Element {
   });
   const mapRef = useRef<any>(null);
   const flatlistRef = useRef<FlatList>(null);
+  // RefObject로 정의되어 generic Overloading type 2.readonly(current의 값을 수정할 수 없음)
   // const markerRefs = useRef<Array<React.RefObject<MapMarker>>>([]);
   const [busanInfo,setBusanInfo] = useState<IBusanInfo>();
   const [filterTargetCloseStore, setFilterTargetCloseStore] = useState<IRstr[]>([]);
@@ -58,7 +59,7 @@ function App(): JSX.Element {
     if(!busanInfo) return;
     return busanInfo.rstr.map((item) => {
       const isActive = filterTargetCloseStore?.find((place) => place.RSTR_ID === item.RSTR_ID);
-      
+      // immutable value를 markerRef에 할당
       // if(!markerRefs.current[index]) markerRefs.current[index] = React.createRef();
       // const markerRef = markerRefs.current[index];
       
@@ -73,6 +74,7 @@ function App(): JSX.Element {
                   latitude: +item.RSTR_LA,
                   longitude: +item.RSTR_LO
                 }}
+                // throw error. it is not MutableRef(type.3)
                 // ref={markerRef}
               />
     })
