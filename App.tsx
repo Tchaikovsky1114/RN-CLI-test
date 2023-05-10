@@ -65,7 +65,7 @@ function App(): JSX.Element {
     if(!busanInfo) return;
     return busanInfo.rstr.map((item) => {
       const isActive = filterTargetCloseStore?.find((place) => place.RSTR_ID === item.RSTR_ID);
-      // immutable value를 markerRef에 할당
+      // Error. immutable ref<readonly>를 markerRef에 할당
       // if(!markerRefs.current[index]) markerRefs.current[index] = React.createRef();
       // const markerRef = markerRefs.current[index];
       
