@@ -37,8 +37,9 @@ function App(): JSX.Element {
   // modify MutableRefObject<T, undefind>[]
   // don't init any value if it has any value, typescript throw error
   // because of useRef type3 only have undefined of init value
-  // if you want to init value for component mount,
-  // don't use type casting. do define type
+  // if you want to init value for component is mounted,
+  // don't use type casting. do define type MutableRefObject<T, undefined>
+  // this situation type T is MapMarker
   // const markerRefs = useRef<Array<React.RefObject<MapMarker>>>([]);
   const [busanInfo,setBusanInfo] = useState<IBusanInfo>();
   const [filterTargetCloseStore, setFilterTargetCloseStore] = useState<IRstr[]>([]);
