@@ -4,6 +4,10 @@ import { FlatList, SafeAreaView,StyleSheet,Text,TouchableOpacity,View } from 're
 import MapView from 'react-native-map-clustering'
 import CustomMarker from './components/CustomMarker';
 import { getDistance } from 'geolib';
+import MapTypes from 'react-native-maps'
+
+
+
 // import { MapMarker } from 'react-native-maps';
 
 interface IRstr {
@@ -17,12 +21,14 @@ interface IRstr {
   RSTR_LA: string;
   RSTR_LO: string;
 }
+interface IClosedStore extends IRstr {
+  distance: number;
+}
 
 interface IBusanInfo {
   totalCount: number;
   rstr: Array<IRstr>;
 }
-
 
 function App(): JSX.Element {
   const [location, _setLocation] = useState({
@@ -31,20 +37,12 @@ function App(): JSX.Element {
     latitudeDelta: 0.05,
     longitudeDelta:0.05,
   });
-  const mapRef = useRef<any>(null);
-  const flatlistRef = useRef<FlatList>(null);
-  // RefObject로 정의되어 generic Overloading type 2.readonly(current의 값을 수정할 수 없음)
-  // modify MutableRefObject<T, undefind>[]
-  // don't init any value if it has any value, typescript throw error
-  // because of useRef type3 only have undefined of init value
-  // if you want to init value for component is mounted,
-  // don't use type casting. do define type MutableRefObject<T, undefined>
-  // this situation type T is MapMarker
-  // const markerRefs = useRef<Array<React.RefObject<MapMarker>>>([]);
-  const [busanInfo,setBusanInfo] = useState<IBusanInfo>();
-  const [filterTargetCloseStore, setFilterTargetCloseStore] = useState<IRstr[]>([]);
-  const [currentMarker,setCurrentMarker] = useState<IRstr>();
   
+  const mapRef = useRef<MapTypes>(null);
+  const flatlistRef = useRef<FlatList<IClosedStore>>(null);
+  const [busanInfo,setBusanInfo] = useState<IBusanInfo>();
+  const [filterTargetCloseStore, setFilterTargetCloseStore] = useState<IClosedStore[]>([]);
+  const [currentMarker,setCurrentMarker] = useState<IRstr>();
  
   /**
    * @description : 부산광역시 식당 정보를 가져온다.
@@ -65,10 +63,6 @@ function App(): JSX.Element {
     if(!busanInfo) return;
     return busanInfo.rstr.map((item) => {
       const isActive = filterTargetCloseStore?.find((place) => place.RSTR_ID === item.RSTR_ID);
-      // Error. immutable ref<readonly>를 markerRef에 할당
-      // if(!markerRefs.current[index]) markerRefs.current[index] = React.createRef();
-      // const markerRef = markerRefs.current[index];
-      
       return <CustomMarker
                 key={`${item.RSTR_ID}-${isActive ? 'active' : 'inactive'}`}
                 busanInfo={busanInfo}
@@ -80,8 +74,6 @@ function App(): JSX.Element {
                   latitude: +item.RSTR_LA,
                   longitude: +item.RSTR_LO
                 }}
-                // throw error. it is not MutableRef(type.3)
-                // ref={markerRef}
               />
     })
   },[busanInfo,filterTargetCloseStore,currentMarker])
@@ -94,14 +86,21 @@ function App(): JSX.Element {
        * @param distance : 거리(Meter)
        * @filterTargetCloseStore : distance 이내의 식당 정보가 담긴 Object Array
        */
-    const getCloseStore = useCallback((target:IRstr[], item: IRstr, distance: number) => {
+    const getCloseStore = useCallback((target:IRstr[], item: IRstr, dt: number) => {
       setCurrentMarker(() => item)
       if(currentMarker?.RSTR_ID === item.RSTR_ID) return; 
-      const closeStore = target.filter((place) => {
-        if(place.RSTR_ID === item.RSTR_ID) return;
-        return getDistance({ latitude: item.RSTR_LA, longitude: item.RSTR_LO }, { latitude: place.RSTR_LA, longitude: place.RSTR_LO }) <= distance
-      })
-      setFilterTargetCloseStore(() => closeStore)
+      
+      const closeStore = target.map((place) => {
+        const computedDistance = getDistance({ latitude: item.RSTR_LA, longitude: item.RSTR_LO }, { latitude: place.RSTR_LA, longitude: place.RSTR_LO })
+        if(place.RSTR_ID !== item.RSTR_ID && computedDistance <= dt){
+          return {
+            ...place,
+            distance: computedDistance
+          }
+        }
+      }).filter((store) => store !== undefined);
+      
+      setFilterTargetCloseStore(() => closeStore as IClosedStore[])
   },[currentMarker])
 
   useEffect(() => {
@@ -124,21 +123,20 @@ function App(): JSX.Element {
             {renderMarkers()}
           </MapView>
           <FlatList
+          ref={flatlistRef}
           style={{position:'absolute', bottom:0, width:'100%'}}
           horizontal
           contentContainerStyle={{paddingHorizontal:10,paddingVertical:4}}
           data={filterTargetCloseStore}
           keyExtractor={(item) => item.RSTR_ID}
-          renderItem={({item,index}) => (
+          renderItem={({item}) => (
           <TouchableOpacity
             style={{padding:10, minWidth:120, height: 120, justifyContent:'center',borderWidth:1, borderRadius: 16, borderColor:'#2d63e2',backgroundColor:'#fff'}}
             onPress={() => {
-              // if(!flatlistRef.current) return;
-              // flatlistRef.current.scrollToIndex({index:, animated:true})
-              console.log(item)
-              // flatlist를 첫번째 인덱스에 맞춤으로 옮겨줘야 함
+              if(!flatlistRef.current) return;
+              flatlistRef.current.scrollToIndex({index:0, animated:true})
               if(!mapRef.current || !busanInfo) return;
-                mapRef.current?.animateToRegion(
+                mapRef.current.animateToRegion(
                 {
                   latitude:+item.RSTR_LA,
                   longitude:+item.RSTR_LO,
@@ -152,6 +150,7 @@ function App(): JSX.Element {
             >
             <View style={{alignItems:'center'}}>
               <Text>{item.RSTR_NM}</Text>
+              <Text style={{color:'#ccc'}}>{item.distance}M</Text>
             </View>
           </TouchableOpacity>)
           }
