@@ -125,8 +125,8 @@ function App(): JSX.Element {
           <TouchableOpacity
             style={{padding:10, minWidth:120, height: 120, justifyContent:'center',borderWidth:1, borderRadius: 16, borderColor:'#2d63e2',backgroundColor:'#fff'}}
             onPress={() => {
-              if(!flatlistRef.current) return;
-              flatlistRef.current.scrollToIndex({index, animated:true})
+              // if(!flatlistRef.current) return;
+              // flatlistRef.current.scrollToIndex({index:, animated:true})
               console.log(item)
               // flatlist를 첫번째 인덱스에 맞춤으로 옮겨줘야 함
               if(!mapRef.current || !busanInfo) return;
