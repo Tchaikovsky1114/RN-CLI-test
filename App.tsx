@@ -33,6 +33,13 @@ function App(): JSX.Element {
   });
   const mapRef = useRef<any>(null);
   const flatlistRef = useRef<FlatList>(null);
+  // RefObject로 정의되어 generic Overloading type 2.readonly(current의 값을 수정할 수 없음)
+  // modify MutableRefObject<T, undefind>[]
+  // don't init any value if it has any value, typescript throw error
+  // because of useRef type3 only have undefined of init value
+  // if you want to init value for component is mounted,
+  // don't use type casting. do define type MutableRefObject<T, undefined>
+  // this situation type T is MapMarker
   // const markerRefs = useRef<Array<React.RefObject<MapMarker>>>([]);
   const [busanInfo,setBusanInfo] = useState<IBusanInfo>();
   const [filterTargetCloseStore, setFilterTargetCloseStore] = useState<IRstr[]>([]);
@@ -58,7 +65,7 @@ function App(): JSX.Element {
     if(!busanInfo) return;
     return busanInfo.rstr.map((item) => {
       const isActive = filterTargetCloseStore?.find((place) => place.RSTR_ID === item.RSTR_ID);
-      
+      // Error. immutable ref<readonly>를 markerRef에 할당
       // if(!markerRefs.current[index]) markerRefs.current[index] = React.createRef();
       // const markerRef = markerRefs.current[index];
       
@@ -73,6 +80,7 @@ function App(): JSX.Element {
                   latitude: +item.RSTR_LA,
                   longitude: +item.RSTR_LO
                 }}
+                // throw error. it is not MutableRef(type.3)
                 // ref={markerRef}
               />
     })
